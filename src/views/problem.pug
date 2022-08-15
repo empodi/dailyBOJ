@@ -1,0 +1,22 @@
+extends base.pug
+
+block content 
+  h1 Set the Tags
+  form(method="POST")
+    div 
+      for level in setlist[0]
+        label
+          input(type="checkbox" value=level.num name=level.tier) 
+          span=level.tier
+          <br>
+    <hr>
+    div
+      for tag in setlist[1]
+        label
+          if tag.major
+            input(type="checkbox" value=tag.enName name=tag.koName checked) 
+          else 
+            input(type="checkbox" value=tag.enName name=tag.koName)
+          span=tag.koName
+        <br>
+    input(type="submit",value="Set Problem Settings")
