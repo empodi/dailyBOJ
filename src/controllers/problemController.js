@@ -1,4 +1,3 @@
-import express from "express";
 import axios from "axios";
 import {
   taglistOptions,
@@ -8,8 +7,6 @@ import {
   majorTags,
   levels,
 } from "./options";
-
-const problemRouter = express.Router();
 
 const getTags = async () => {
   let tagArray = [];
@@ -102,7 +99,7 @@ const getPlatinum = async () => {
   return pArray;
 };
 
-const getProblemSettings = async (req, res) => {
+export const getProblemSettings = async (req, res) => {
   let setlist = [];
   const taglist = await getTags();
 
@@ -175,7 +172,7 @@ const buildQuery = (nums) => {
   return queryList;
 };
 
-const postProblemSettings = async (req, res) => {
+export const postProblemSettings = async (req, res) => {
   const settings = Object.values(req.body);
   let levelnums = [];
   let tagSet = new Set();
@@ -236,7 +233,3 @@ const postProblemSettings = async (req, res) => {
   //console.info(new Blob([JSON.stringify(filtered)]).size);
   return res.send(JSON.stringify(plist));
 };
-
-problemRouter.route("/").get(getProblemSettings).post(postProblemSettings);
-
-export default problemRouter;
