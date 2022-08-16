@@ -105,14 +105,6 @@ const getPlatinum = async () => {
 const getProblemSettings = async (req, res) => {
   let setlist = [];
   const taglist = await getTags();
-  //const slist = await getSilver();
-  //const glist = await getGold();
-  //const plist = await getPlatinum();
-
-  //return res.send(JSON.stringify(tlist));
-  //return res.send(JSON.stringify(taglist));
-
-  //console.log(plist);
 
   taglist.forEach((tag) => {
     if (majorTags.includes(tag.enName)) tag.major = true;
@@ -122,51 +114,125 @@ const getProblemSettings = async (req, res) => {
   setlist.push(levels);
   setlist.push(taglist);
   //console.log(taglist);
-
   return res.render("problem", { setlist });
+};
+
+const onlyNumbers = (str) => {
+  return /^[0-9]+$/.test(str);
+};
+
+const findTier = (n) => {
+  let ret;
+  for (let level of levels) {
+    if (level.num === n) ret = level.tier;
+  }
+  return ret.charAt(0) + ret.charAt(ret.length - 1);
+};
+
+const groupArray = (nums) => {
+  let prev = 0;
+  let cur = 1;
+  let ret = []; // build a 2d array
+  while (cur <= nums.length) {
+    if (nums[cur - 1] + 1 !== nums[cur] || cur === nums.length) {
+      let r = [];
+      if (cur - 1 === prev) r.push(nums[prev]);
+      else {
+        r.push(nums[prev]);
+        r.push(nums[cur - 1]);
+      }
+      ret.push(r);
+      prev = cur;
+    }
+    cur++;
+  }
+  return ret;
+};
+
+const buildQuery = (nums) => {
+  let queryList = [];
+  const ranges = groupArray(nums);
+
+  for (let range of ranges) {
+    let obj = new Object();
+    let qq = new Object();
+    qq.method = "GET";
+    qq.url = "https://solved.ac/api/v3/search/problem";
+    qq.headers = { "Content-Type": "application/json" };
+    qq.params = new Object();
+    if (range.length === 1) {
+      qq.params.query = `*${findTier(range[0])}&lang:ko&s#200..`;
+      obj.page = 3;
+    } else if (range.length === 2) {
+      qq.params.query = `*${findTier(range[0])}..${findTier(
+        range[1]
+      )}&lang:ko&s#200..`;
+      obj.page = (range[1] - range[0] + 1) * 3;
+    }
+    obj.query = qq;
+    queryList.push(obj);
+  }
+  return queryList;
 };
 
 const postProblemSettings = async (req, res) => {
   const settings = Object.values(req.body);
   let levelnums = [];
-  let tags = [];
-
-  let tmp = [];
-  for (let i = 6; i <= 20; i++) tmp.push(String(i));
-  const numCheck = new Set(tmp);
+  let tagSet = new Set();
 
   settings.forEach((elem) => {
-    if (numCheck.has(elem)) levelnums.push(Number(elem));
-    else tags.push(elem);
+    if (onlyNumbers(elem)) levelnums.push(Number(elem));
+    else tagSet.add(elem);
   });
 
-  const tagSet = new Set(tags);
+  levelnums.sort((a, b) => a - b);
   const levelSet = new Set(levelnums);
+  const queryArray = buildQuery(levelnums);
 
-  console.log("tagSet", tagSet);
-  console.log("levelSet", levelSet);
+  //console.log("tagSet", tagSet);
+  //console.log("levelSet", levelSet);
 
   let filtered = [];
-  const goldList = await getGold();
 
-  goldList.forEach((elem) => {
-    const { tags, level } = elem;
-    if (levelSet.has(level)) {
-      let cnt = 0;
-      for (let tag of tags) {
-        if (tagSet.has(tag)) cnt++;
-      }
-      if (cnt === tags.length) {
-        filtered.push(elem);
+  const promises = queryArray.map(async (queryObj) => {
+    for (let i = 1; i <= queryObj.page; i++) {
+      queryObj.query.params.page = String(i);
+      const result = await axios.request(queryObj.query);
+      if (result.status === 200) {
+        const { items } = result.data;
+        if (items.length === 0) break;
+        for (let item of items) {
+          if (levelSet.has(item.level) && item.isSolvable && !item.isPartial) {
+            // 레벨은 더블 체킹, 채점 가능 여부 확인, 서브 태스크 및 부분 점수 문제는 제외
+            let obj = new Object();
+            obj.problemId = item.problemId;
+            obj.title = item.titleKo;
+            obj.level = item.level;
+            obj.tags = [];
+            let cnt = 0;
+            for (let tag of item.tags) {
+              if (tagSet.has(tag.key)) cnt++;
+              obj.tags.push(tag.key);
+            }
+            if (cnt === item.tags.length) {
+              filtered.push(obj);
+            }
+          }
+        }
       }
     }
   });
 
-  //console.log(goldList.length);
-  //console.log(filtered.length);
+  await Promise.all(promises);
+
+  console.log(filtered.length);
+  let plist = [];
+  for (let p of filtered) {
+    plist.push(p.problemId);
+  }
 
   //console.info(new Blob([JSON.stringify(filtered)]).size);
-  return res.send(JSON.stringify(filtered));
+  return res.send(JSON.stringify(plist));
 };
 
 problemRouter.route("/").get(getProblemSettings).post(postProblemSettings);

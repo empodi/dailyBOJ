@@ -241,7 +241,6 @@ export const majorTags = [
   "mst",
   "knapsack",
   "recursion",
-  "hashing",
   "topological_sorting",
   "deque",
   "queue",
@@ -249,6 +248,8 @@ export const majorTags = [
   "dijkstra",
   "prefix_sum",
   "disjoint_set",
+  "hash_set",
+  "tree_set",
 ];
 
 export const levels = [
