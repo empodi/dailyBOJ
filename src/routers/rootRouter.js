@@ -1,5 +1,5 @@
 import express from "express";
-import { getJoin } from "../controllers/userController";
+import { getJoin, postJoin } from "../controllers/userController";
 
 const rootRouter = express.Router();
 
@@ -9,6 +9,6 @@ const handleHome = async (req, res) => {
 };
 
 rootRouter.get("/", handleHome);
-rootRouter.get("/join", getJoin);
+rootRouter.route("/join").get(getJoin).post(postJoin);
 
 export default rootRouter;

@@ -195,7 +195,7 @@ export const postProblemSettings = async (req, res) => {
     for (let i = 1; i <= queryObj.page; i++) {
       queryObj.query.params.page = String(i);
       const result = await axios.request(queryObj.query);
-      if (result.status === 200) {
+      if (result.status == 200) {
         const { items } = result.data;
         if (items.length === 0) break;
         for (let item of items) {
