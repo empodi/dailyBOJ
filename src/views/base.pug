@@ -4,8 +4,9 @@ html(lang="en")
     title BOJ DAILY
     //-link(rel="stylesheet", href="https://unpkg.com/mvp.css")
   body
+    include partials/header.pug
     main 
       block content
-    footer &copy; #{new Date().getFullYear()} BOJ DAILY
+    include partials/footer.pug
   block scripts
   script(src="/static/js/main.js")

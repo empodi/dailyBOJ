@@ -4,11 +4,12 @@ import { getJoin, postJoin } from "../controllers/userController";
 const rootRouter = express.Router();
 
 const handleHome = async (req, res) => {
-  console.log("handleHome!!");
-  return res.send("It's Home");
+  //console.log("handleHome!!");
+  return res.render("home");
 };
 
 rootRouter.get("/", handleHome);
 rootRouter.route("/join").get(getJoin).post(postJoin);
+rootRouter.get("/login");
 
 export default rootRouter;
