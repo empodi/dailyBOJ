@@ -14,6 +14,7 @@ app.use(express.urlencoded({ extended: true })); // translates HTML form into ja
 app.use(express.json()); // Backend understands the STRING and turn it into JS object
 app.use("/", rootRouter);
 app.use("/problems", problemRouter);
+app.use("/static", express.static("assets"));
 
 const handleListen = () => console.log(`🎸 Server listening on PORT ${PORT}`);
 
