@@ -10,7 +10,8 @@
     "process": false,
     "module": false,
     "require": false,
-    "__dirname": false
+    "__dirname": false,
+    "CryptoJS": false
   },
   "parserOptions": {
     "ecmaVersion": 2018,
