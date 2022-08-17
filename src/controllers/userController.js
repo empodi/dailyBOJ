@@ -1,3 +1,5 @@
-import axios from "axios";
+import User from "../models/User";
 
-export const getJoin = (req, res) => {};
+export const getJoin = (req, res) => {
+  return res.render("join");
+};

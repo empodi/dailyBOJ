@@ -1,4 +1,5 @@
 import express from "express";
+import { getJoin } from "../controllers/userController";
 
 const rootRouter = express.Router();
 
@@ -8,6 +9,6 @@ const handleHome = async (req, res) => {
 };
 
 rootRouter.get("/", handleHome);
-rootRouter.get("/join", (req, res) => res.send("JOIN NOW"));
+rootRouter.get("/join", getJoin);
 
 export default rootRouter;
