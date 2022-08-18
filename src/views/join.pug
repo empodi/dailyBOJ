@@ -8,7 +8,7 @@ block content
       button GO
     span#AUTH 
     <hr>
-    form(method="POST" onsubmit="return IDAndPwdChecker();")
+    form(method="POST",data-flag="false",onsubmit="return ID_PWD_Checker();")#subForm
       input(name="userId", placeholder="백준 아이디", type="text", readonly=true, required)#userID
       input(name="password", placeholder="Password" type="password",required)#PWD1
       input(name="confirmPassword", placeholder="Confirm password" type="password", required)#PWD2
@@ -17,10 +17,17 @@ block content
 block scripts 
   script(src="/static/js/checkBOJ.js")
   script(type="text/javascript").
-    const IDAndPwdChecker = () => {
+    const ID_PWD_Checker = () => {
+      try {
         const user = document.querySelector("#userID").value;
         const pwd1 = document.querySelector("#PWD1").value;
         const pwd2 = document.querySelector("#PWD2").value;
+        const { flag } = document.querySelector("#subForm").dataset;
+        console.log(flag);
+        if (String(flag) == "false") {
+          alert("백준 아이디 인증을 먼저 해주세요.");
+          return false;
+        }
         if (user.length < 3) {
           alert("백준 아이디 인증을 다시 해주세요.");
           return false;
@@ -29,10 +36,15 @@ block scripts
           alert("비밀번호에 영문 대문자가 포함되어 있습니다.");
           return false;
         }
-        if (pwd1 !== pwd2) {
+        if (String(pwd1) !== String(pwd2)) {
           alert("비밀번호가 일치하지 않습니다.");
           return false;
         }
         return true;
+      }
+      catch(err) { 
+        console.log(err);
+        return false 
       };
+    };
 

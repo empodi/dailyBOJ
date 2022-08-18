@@ -17,10 +17,13 @@ const handleSubmit = async (event) => {
 
   const user = BOJ_ID.value;
   userOptions.params.handle = user;
-
+  /*
+  const sb = document.querySelector("#subForm").dataset;
+  console.log(String(sb.flag));
+  */
   try {
     const result = await axios.request(userOptions);
-    if (result.status === 200) {
+    if (result.status == 200) {
       const {
         data: { handle, exp },
       } = result;
@@ -41,6 +44,8 @@ const handleSubmit = async (event) => {
     }
     authSpan.innerText = "인증 성공";
     userID.value = user;
+    document.querySelector("#subForm").dataset.flag = "true";
+    //console.log(document.querySelector("#subForm").dataset.flag);
   } catch (err) {
     console.log(err);
     authSpan.innerText = "인증 실패";
