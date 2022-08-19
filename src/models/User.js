@@ -5,8 +5,10 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   salt: { type: String, required: true },
   email: { type: String, require: true, unique: true },
-  totalSolved: [{ type: Number }],
   todaySolved: [{ type: Number }],
+  tags: [{ type: String }],
+  levels: [{ type: String }],
+  totalSolved: [{ type: Number }],
   problemSet: [{ type: Number }],
 });
 

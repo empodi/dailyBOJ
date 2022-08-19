@@ -233,3 +233,7 @@ export const postProblemSettings = async (req, res) => {
   //console.info(new Blob([JSON.stringify(filtered)]).size);
   return res.send(JSON.stringify(plist));
 };
+
+/*
+query for sovled.ac API: *s5..p1&lang:ko&s#100..&solvable:true
+*/

@@ -1,5 +1,6 @@
 import express from "express";
 import passport from "passport";
+import { setDBTag, setDBProblem } from "../controllers/dbController";
 import {
   getJoin,
   getLogin,
@@ -13,6 +14,9 @@ const handleHome = async (req, res) => {
   //console.log("handleHome!!");
   return res.render("home");
 };
+
+rootRouter.get("/dbProblem", setDBProblem);
+rootRouter.get("/dbTag", setDBTag);
 
 rootRouter.get("/", handleHome);
 rootRouter.route("/join").get(getJoin).post(postJoin);
