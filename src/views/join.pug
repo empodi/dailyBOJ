@@ -2,18 +2,20 @@ extends base.pug
 
 block content
   h1 Make Account
-    form#BOJ
-      input(name="userId-Boj", placeholder="백준 아이디", type="text", class="bojID", minlength=3, required)#BOJ-ID
-      input(name="solvedExp", placeholder="solvedac exp", type="text", required)#BOJ-EXP
-      button GO
-    span#AUTH 
-    <hr>
-    form(method="POST",data-flag="false",onsubmit="return ID_PWD_Checker();")#subForm
-      input(name="userId", placeholder="백준 아이디", type="text", readonly=true, required)#userID
-      input(name="password", placeholder="Password" type="password",required)#PWD1
-      input(name="confirmPassword", placeholder="Confirm password" type="password", required)#PWD2
-      input(name="email", placeholder="Email" type="email", required)
-      input(type="submit",value="Join")
+  if errorMessage
+    span=errorMessage
+  form#BOJ
+    input(name="userId-Boj", placeholder="백준 아이디", type="text", class="bojID", minlength=3, required)#BOJ-ID
+    input(name="solvedExp", placeholder="solvedac exp", type="text", required)#BOJ-EXP
+    button GO
+  span#AUTH 
+  <hr>
+  form(method="POST",data-flag="false",onsubmit="return ID_PWD_Checker();")#subForm
+    input(name="userId", placeholder="백준 아이디", type="text", readonly=true, required)#userID
+    input(name="password", placeholder="Password" type="password",required)#PWD1
+    input(name="confirmPassword", placeholder="Confirm password" type="password", required)#PWD2
+    input(name="email", placeholder="Email" type="email", required)
+    input(type="submit",value="Join")
 block scripts 
   script(src="/static/js/checkBOJ.js")
   script(type="text/javascript").
@@ -36,7 +38,7 @@ block scripts
           alert("비밀번호에 영문 대문자가 포함되어 있습니다.");
           return false;
         }
-        if (String(pwd1) !== String(pwd2)) {
+        if (String(pwd1) != String(pwd2)) {
           alert("비밀번호가 일치하지 않습니다.");
           return false;
         }

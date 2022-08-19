@@ -1,9 +1,19 @@
 header 
-  nav 
+  if loggedIn 
+    h1 Welcome #{loggedInUser}
+  nav
     ul
-      li
-        a(href="/join") Join
       li 
-        a(href="/login") Login
-      li 
-        a(href="/user") Profile
+        a(href="/") Home
+      if loggedIn 
+        li 
+          a(href="/problems") problems
+        li 
+          a(href="/user") Profile
+        li 
+          a(href="/logout") Logout
+      else
+        li
+          a(href="/join") Join
+        li 
+          a(href="/login") Login

@@ -17,20 +17,15 @@ const handleSubmit = async (event) => {
 
   const user = BOJ_ID.value;
   userOptions.params.handle = user;
-  /*
-  const sb = document.querySelector("#subForm").dataset;
-  console.log(String(sb.flag));
-  */
+
   try {
     const result = await axios.request(userOptions);
     if (result.status == 200) {
       const {
         data: { handle, exp },
       } = result;
-      console.log(result.data.solvedCount);
+
       const inputExp = Number(BOJ_EXP.value);
-      console.log("exp", exp);
-      console.log("inputExp", inputExp);
 
       if (handle !== user) {
         authSpan.innerText = "인증 실패: 아이디를 정확하게 입력해주세요.";

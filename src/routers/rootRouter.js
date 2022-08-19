@@ -1,5 +1,11 @@
 import express from "express";
-import { getJoin, postJoin } from "../controllers/userController";
+import passport from "passport";
+import {
+  getJoin,
+  getLogin,
+  getLogout,
+  postJoin,
+} from "../controllers/userController";
 
 const rootRouter = express.Router();
 
@@ -10,6 +16,14 @@ const handleHome = async (req, res) => {
 
 rootRouter.get("/", handleHome);
 rootRouter.route("/join").get(getJoin).post(postJoin);
-rootRouter.get("/login");
-
+//rootRouter.route("/login").get(getLogin).post(postLogin);
+rootRouter.get("/login", getLogin);
+rootRouter.post(
+  "/login",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/login",
+  })
+);
+rootRouter.get("/logout", getLogout);
 export default rootRouter;
