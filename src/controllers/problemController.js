@@ -201,8 +201,8 @@ const findTagsFromAPI = async () => {
 };
 
 const buildLevelTagList = async () => {
-  let tagList = [];
   try {
+    let tagList = [];
     tagList = await findTagsFromDB();
     if (tagList.length === 0) {
       tagList = await findTagsFromAPI();
@@ -228,16 +228,20 @@ const buildLevelTagList = async () => {
 };
 
 export const getProblemSettings = async (req, res) => {
-  const levelTagList = await buildLevelTagList();
-
-  if (
-    levelTagList.length === 2 &&
-    levelTagList[0].length >= levels.length &&
-    levelTagList[1].length > 190
-  ) {
-    return res.render("problem", { levelTagList });
-  } else {
-    console.log("❌ Cannot get Tags from DB nor Solved.ac");
+  try {
+    const levelTagList = await buildLevelTagList();
+    if (
+      levelTagList.length === 2 &&
+      levelTagList[0].length >= levels.length &&
+      levelTagList[1].length > 190
+    ) {
+      return res.render("problem", { levelTagList });
+    } else {
+      console.log("❌ Cannot get Tags from DB nor Solved.ac");
+      return res.status(400).render("home");
+    }
+  } catch (err) {
+    console.log(err);
     return res.status(400).render("home");
   }
 };
@@ -263,33 +267,40 @@ const filterDBProblem = async (levelnums, tagSet) => {
 };
 
 const filterAPIProblem = async (levelnums, tagSet) => {
-  const levelSet = new Set(levelnums);
-  const queryArray = buildQuery(levelnums);
-  let filtered = [];
+  try {
+    const levelSet = new Set(levelnums);
+    const queryArray = buildQuery(levelnums);
+    let filtered = [];
+    const promises = queryArray.map(async (queryObj) => {
+      for (let i = 1; i <= queryObj.page; i++) {
+        queryObj.query.params.page = String(i);
+        const result = await axios.request(queryObj.query);
+        if (result.status === 200) {
+          const { items } = result.data;
+          if (items.length === 0) break;
 
-  const promises = queryArray.map(async (queryObj) => {
-    for (let i = 1; i <= queryObj.page; i++) {
-      queryObj.query.params.page = String(i);
-      const result = await axios.request(queryObj.query);
-      if (result.status === 200) {
-        const { items } = result.data;
-        if (items.length === 0) break;
-
-        for (const item of items) {
-          if (levelSet.has(item.level) && item.isSolvable && !item.isPartial) {
-            // 레벨은 더블 체킹, 채점 가능 여부 확인, 서브 태스크 및 부분 점수 문제는 제외
-            const tagKeys = item.tags.map((elem) => elem.key);
-            if (tagKeys.every((tag) => tagSet.has(tag))) {
-              filtered.push(String(item.problemId));
+          for (const item of items) {
+            if (
+              levelSet.has(item.level) &&
+              item.isSolvable &&
+              !item.isPartial
+            ) {
+              // 레벨은 더블 체킹, 채점 가능 여부 확인, 서브 태스크 및 부분 점수 문제는 제외
+              const tagKeys = item.tags.map((elem) => elem.key);
+              if (tagKeys.every((tag) => tagSet.has(tag))) {
+                filtered.push(String(item.problemId));
+              }
             }
           }
         }
       }
-    }
-  });
-
-  await Promise.all(promises);
-  return filtered;
+    });
+    await Promise.all(promises);
+    return filtered;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
 };
 
 export const postProblemSettings = async (req, res) => {
@@ -320,7 +331,7 @@ export const postProblemSettings = async (req, res) => {
       return res.status(400).redirect("home");
     }
     if (userProblems.length < 100) {
-      // alert the number of problems is too small
+      // alert to the user that the number of problems is too small
       console.log("❗️ Number of problems less than 100!!");
     }
 
