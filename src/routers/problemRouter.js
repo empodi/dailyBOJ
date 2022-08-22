@@ -1,4 +1,5 @@
 import express from "express";
+import { onlyPrivate } from "../../middlewares";
 import {
   getProblemSettings,
   postProblemSettings,
@@ -6,5 +7,9 @@ import {
 
 const problemRouter = express.Router();
 
-problemRouter.route("/").get(getProblemSettings).post(postProblemSettings);
+problemRouter
+  .route("/")
+  .all(onlyPrivate)
+  .get(getProblemSettings)
+  .post(postProblemSettings);
 export default problemRouter;
