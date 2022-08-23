@@ -95,13 +95,9 @@ export const postJoin = async (req, res) => {
 const createLoginHashedPassword = (userId, plainPassword) =>
   // eslint-disable-next-line no-async-promise-executor
   new Promise(async (resolve, reject) => {
-    const salt = await User.findOne({
-      attributes: ["salt"],
-      raw: true,
-      where: {
-        userId,
-      },
-    }).then((result) => result.salt);
+    const salt = await User.findOne({ userId: userId }).then(
+      (result) => result.salt
+    );
     crypto.pbkdf2(plainPassword, salt, 9999, 64, "sha512", (err, key) => {
       if (err) reject(err);
       resolve(key.toString("base64"));
@@ -126,7 +122,7 @@ passport.deserializeUser(function (userId, done) {
 passport.use(
   new LocalStrategy(
     {
-      usernameField: "userId",
+      usernameField: "userId" /** try _id */,
       passwordField: "password",
     },
     async (userId, password, done) => {
@@ -143,9 +139,12 @@ passport.use(
           password
         );
         if (dbPassword !== hashedLoginPassword) {
+          //console.log(dbPassword);
+          //console.log(hashedLoginPassword);
           //console.log("different password");
           return done(null, false);
         }
+        console.log("Login Done");
         return done(null, user.userId);
       } catch (err) {
         console.log(err);
@@ -155,7 +154,7 @@ passport.use(
   )
 );
 
-export const getLogout = (req, res, next) => {
+export const getLogout = async (req, res, next) => {
   req.logout((err) => {
     if (err) {
       return next(err);
@@ -166,4 +165,12 @@ export const getLogout = (req, res, next) => {
       res.redirect("/");
     }
   });
+};
+
+export const getProfile = async (req, res, next) => {
+  //console.log("req.params:", req.params);
+  const userId = req.params.id;
+  const user = await User.findOne({ userId });
+  console.log(user);
+  return res.send("Profile");
 };
