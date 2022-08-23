@@ -1,0 +1,19 @@
+extends base.pug 
+
+block content
+  div 
+    h4 ID: #{user.userId}
+    h3 랜덤 문제 수: #{user.problemSet.length}
+    <br>
+    each level in levelName
+      span=level
+      <br>
+    <br>
+    each tag in koTag
+      span=tag 
+      <br>
+    <br>
+    each problem in user.totalSolved 
+      a(href=`https://www.acmicpc.net/problem/${problem}` target="_blank" rel="noopener noreferrer") #{problem}
+      <br>
+    

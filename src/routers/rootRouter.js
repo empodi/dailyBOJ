@@ -6,20 +6,16 @@ import {
   getJoin,
   getLogin,
   getLogout,
+  home,
   postJoin,
 } from "../controllers/userController";
 
 const rootRouter = express.Router();
 
-const handleHome = async (req, res) => {
-  //console.log("handleHome!!");
-  return res.render("home");
-};
-
 rootRouter.get("/dbProblem", setDBProblem);
 rootRouter.get("/dbTag", setDBTag);
 
-rootRouter.get("/", handleHome);
+rootRouter.get("/", home);
 rootRouter.route("/join").all(onlyPublic).get(getJoin).post(postJoin);
 //rootRouter.route("/login").get(getLogin).post(postLogin);
 rootRouter

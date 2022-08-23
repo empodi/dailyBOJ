@@ -219,12 +219,10 @@ const buildLevelTagList = async (userId) => {
 
     tagList.forEach((tag) => {
       if (dbTag.length > 0) {
-        if (dbTag.includes(tag.enName) || dbTag.includes(tag.key))
-          tag.isMajor = true;
+        if (dbTag.includes(tag.key)) tag.isMajor = true;
         else tag.isMajor = false;
       } else {
-        if (majorTags.includes(tag.enName) || majorTags.includes(tag.key))
-          tag.isMajor = true;
+        if (majorTags.includes(tag.key)) tag.isMajor = true;
         else tag.isMajor = false;
       }
     });

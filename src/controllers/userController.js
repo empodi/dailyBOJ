@@ -2,6 +2,8 @@ import User from "../models/User";
 import axios from "axios";
 import crypto from "crypto";
 import passport from "passport";
+import Tag from "../models/Tag";
+import { levels } from "./options";
 
 const LocalStrategy = require("passport-local").Strategy;
 
@@ -171,6 +173,59 @@ export const getProfile = async (req, res, next) => {
   //console.log("req.params:", req.params);
   const userId = req.params.id;
   const user = await User.findOne({ userId });
-  console.log(user);
-  return res.send("Profile");
+  const dbTag = await Tag.find({});
+  if (!user) {
+    console.log(`❌ Failed to find ${userId}`);
+    return res.render("home");
+  }
+
+  const userLevel = user.levels;
+  let koTag = [];
+  let levelName = [];
+
+  user.tags.forEach((utag) => {
+    const tagInfo = dbTag.find((dtag) => String(dtag.key) === String(utag));
+    koTag.push(tagInfo.koName);
+  });
+
+  userLevel.forEach((ulevel) => {
+    const levelInfo = levels.find(
+      (level) => Number(level.num) === Number(ulevel)
+    );
+    levelName.push(levelInfo.tier);
+  });
+
+  //console.log(koTag);
+  return res.render("profile", { user, koTag, levelName });
+};
+
+export const home = async (req, res) => {
+  //console.log(req.user);
+  const userId = req.user;
+  if (userId === undefined) {
+    return res.render("home", { loginMessage: "로그인을 먼저 해주세요." });
+  }
+
+  const user = await User.findOne({ userId });
+
+  if (!user) {
+    console.log(`❌ ${userId}의 정보를 가져오는데 실패했습니다.`);
+    return res.render("home", { loginMessage: "로그인을 먼저 해주세요." });
+  }
+  if (user.problemSet.length === 0) {
+    return res.render("home", {
+      loginMessage: "문제 범위를 먼저 설정해주세요.",
+    });
+  }
+  if (user.todaySolved.length === 0) {
+    return res.render("home", { loginMessage: "추천 문제가 없습니다." });
+  }
+
+  const { todaySolved } = user;
+
+  console.log(todaySolved);
+
+  console.log(user.userId);
+
+  return res.render("home", { todaySolved });
 };
