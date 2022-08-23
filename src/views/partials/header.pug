@@ -11,9 +11,9 @@ header
         a(href="/dbTag") Check Tag
       if loggedIn 
         li 
-          a(href="/problems") problems
+          a(href=`/problems/${loggedInUser}`) problems
         li 
-          a(href="/user") Profile
+          a(href=`/users/${loggedInUser}`) Profile
         li 
           a(href="/logout") Logout
       else

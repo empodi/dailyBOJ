@@ -8,7 +8,7 @@ import {
 const problemRouter = express.Router();
 
 problemRouter
-  .route("/")
+  .route("/:id")
   .all(onlyPrivate)
   .get(getProblemSettings)
   .post(postProblemSettings);

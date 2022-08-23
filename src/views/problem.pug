@@ -6,8 +6,12 @@ block content
     div 
       for level in levelTagList[0]
         label
-          input(type="checkbox" value=level.num name=level.tier) 
-          span=level.tier
+          if level.isChecked
+            input(type="checkbox" value=level.num name=level.tier checked) 
+            span=level.tier
+          else 
+            input(type="checkbox" value=level.num name=level.tier) 
+            span=level.tier
           <br>
     <hr>
     div

@@ -1,6 +1,7 @@
 import axios from "axios";
 import Problem from "../models/Problem";
 import Tag from "../models/Tag";
+import User from "../models/User";
 import {
   taglistOptions,
   silverOptions,
@@ -200,27 +201,45 @@ const findTagsFromAPI = async () => {
   }
 };
 
-const buildLevelTagList = async () => {
+const buildLevelTagList = async (userId) => {
   try {
     let tagList = [];
     tagList = await findTagsFromDB();
+    const user = await User.findOne({ userId });
+    //console.log(user);
+    const dbTag = user.tags;
+    const dbLevels = user.levels;
     if (tagList.length === 0) {
       tagList = await findTagsFromAPI();
     }
     if (tagList.length === 0) {
       console.log("❌ Cannot get Tags from DB nor solved.ac API");
       return [];
-    } else {
-      tagList.forEach((tag) => {
+    }
+
+    tagList.forEach((tag) => {
+      if (dbTag.length > 0) {
+        if (dbTag.includes(tag.enName) || dbTag.includes(tag.key))
+          tag.isMajor = true;
+        else tag.isMajor = false;
+      } else {
         if (majorTags.includes(tag.enName) || majorTags.includes(tag.key))
           tag.isMajor = true;
         else tag.isMajor = false;
-      });
-      const levelTagList = [];
-      levelTagList.push(levels);
-      levelTagList.push(tagList);
-      return levelTagList;
-    }
+      }
+    });
+
+    levels.forEach((level) => {
+      if (dbLevels.includes(String(level.num))) {
+        level.isChecked = true;
+      } else level.isChecked = false;
+    });
+
+    const levelTagList = [];
+    /* levels를 꼭 tagList 보다 먼저 push!! */
+    levelTagList.push(levels);
+    levelTagList.push(tagList);
+    return levelTagList;
   } catch (err) {
     console.log(err);
     return [];
@@ -229,7 +248,8 @@ const buildLevelTagList = async () => {
 
 export const getProblemSettings = async (req, res) => {
   try {
-    const levelTagList = await buildLevelTagList();
+    const userId = req.params.id;
+    const levelTagList = await buildLevelTagList(userId);
     if (
       levelTagList.length === 2 &&
       levelTagList[0].length >= levels.length &&
@@ -268,9 +288,9 @@ const filterDBProblem = async (levelnums, tagSet) => {
 
 const filterAPIProblem = async (levelnums, tagSet) => {
   try {
+    let filtered = [];
     const levelSet = new Set(levelnums);
     const queryArray = buildQuery(levelnums);
-    let filtered = [];
     const promises = queryArray.map(async (queryObj) => {
       for (let i = 1; i <= queryObj.page; i++) {
         queryObj.query.params.page = String(i);
@@ -306,13 +326,15 @@ const filterAPIProblem = async (levelnums, tagSet) => {
 export const postProblemSettings = async (req, res) => {
   const settings = Object.values(req.body);
   let levelnums = [];
-  let tagSet = new Set();
-
+  let tags = [];
+  console.log("POST PROBLEM USER:", req.params.id);
   settings.forEach((elem) => {
     if (onlyNumbers(elem)) levelnums.push(Number(elem));
-    else tagSet.add(elem);
+    else tags.push(elem);
   });
   levelnums.sort((a, b) => a - b);
+
+  const tagSet = new Set(tags);
 
   try {
     let userProblems = await filterDBProblem(levelnums, tagSet);
@@ -328,18 +350,30 @@ export const postProblemSettings = async (req, res) => {
 
     if (userProblems.length === 0) {
       console.log("❌ Failed to Filter Problems");
-      return res.status(400).redirect("home");
+      return res.status(400).redirect("/");
     }
     if (userProblems.length < 100) {
       // alert to the user that the number of problems is too small
       console.log("❗️ Number of problems less than 100!!");
     }
 
+    // emtpy the User-problemSet array
+    console.log("problemController user:", req.user);
+
+    const filter = { userId: req.user };
+    const update = { problemSet: userProblems, tags: tags, levels: levelnums };
+
+    await User.findOneAndUpdate(filter, update);
+
+    const doc = await User.findOne(filter);
+    console.log(doc.problemSet);
+    console.log("problemSet from DB: ", doc.problemSet.length);
+
     //console.info(new Blob([JSON.stringify(filtered)]).size);
-    return res.send(JSON.stringify(userProblems));
+    return res.status(200).redirect("/");
   } catch (err) {
     console.log(err);
-    const levelTagList = await buildLevelTagList();
+    const levelTagList = await buildLevelTagList(req.params.id);
     if (
       levelTagList.length === 2 &&
       levelTagList[0].length >= levels.length &&
