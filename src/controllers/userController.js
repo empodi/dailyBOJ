@@ -207,6 +207,8 @@ export const home = async (req, res) => {
   }
 
   const user = await User.findOne({ userId });
+  //const allUser = await User.find({}).select("userId");
+  //console.log(allUser);
 
   if (!user) {
     console.log(`❌ ${userId}의 정보를 가져오는데 실패했습니다.`);
@@ -221,11 +223,11 @@ export const home = async (req, res) => {
     return res.render("home", { loginMessage: "추천 문제가 없습니다." });
   }
 
-  const { todaySolved } = user;
+  const { todaySolved, review } = user;
 
-  console.log(todaySolved);
+  //console.log(todaySolved);
 
-  console.log(user.userId);
+  //console.log(user.userId);
 
-  return res.render("home", { todaySolved });
+  return res.render("home", { todaySolved, review });
 };

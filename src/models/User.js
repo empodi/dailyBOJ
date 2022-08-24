@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   salt: { type: String, required: true },
   email: { type: String, require: true, unique: true },
   todaySolved: [{ type: Number }],
+  review: [{ type: Number }],
   tags: [{ type: String }],
   levels: [{ type: String }],
   totalSolved: [{ type: Number }],

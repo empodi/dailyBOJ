@@ -4,6 +4,7 @@ block content
   div 
     h4 ID: #{user.userId}
     h3 랜덤 문제 수: #{user.problemSet.length}
+    h3 지금까지 푼 문제 수: #{user.totalSolved.length}
     <br>
     each level in levelName
       span=level
