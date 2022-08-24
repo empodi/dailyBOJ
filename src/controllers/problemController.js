@@ -321,6 +321,26 @@ const filterAPIProblem = async (levelnums, tagSet) => {
   }
 };
 
+const getThreeRandom = (candidate) => {
+  const min = 0;
+  const max = candidate.length - 1;
+
+  let indices = [];
+  const indexLen = Math.min(3, candidate.length);
+
+  while (indices.length < indexLen) {
+    const x = Math.floor(Math.random() * (max - min + 1)) + min;
+    if (!indices.includes(x)) indices.push(x);
+  }
+  indices.sort((a, b) => a - b);
+
+  const ret = [];
+  ret.push(candidate[indices[0]]);
+  ret.push(candidate[indices[1]]);
+  ret.push(candidate[indices[2]]);
+  return ret;
+};
+
 export const postProblemSettings = async (req, res) => {
   const settings = Object.values(req.body);
   let levelnums = [];
@@ -363,9 +383,20 @@ export const postProblemSettings = async (req, res) => {
 
     await User.findOneAndUpdate(filter, update);
 
-    const doc = await User.findOne(filter);
-    console.log(doc.problemSet);
-    console.log("problemSet from DB: ", doc.problemSet.length);
+    const dbUser = await User.findOne(filter);
+    //console.log(dbUser.problemSet);
+    //console.log("problemSet from DB: ", dbUser.problemSet.length);
+
+    const first = new Set(dbUser.problemSet);
+    const second = new Set(dbUser.totalSolved);
+    const candidate = [...first].filter((elem) => !second.has(elem));
+
+    const daily = getThreeRandom(candidate);
+    const review = getThreeRandom(dbUser.totalSolved);
+    console.log(daily);
+    console.log(review);
+
+    await User.findOneAndUpdate(filter, { todaySolved: daily, review: review });
 
     //console.info(new Blob([JSON.stringify(filtered)]).size);
     return res.status(200).redirect("/");

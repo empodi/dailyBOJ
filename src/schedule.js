@@ -60,19 +60,53 @@ const updateSolvedProblems = async () => {
   }
 };
 
+const getThreeRandom = (candidate) => {
+  const min = 0;
+  const max = candidate.length - 1;
+
+  let indices = [];
+  const indexLen = Math.min(3, candidate.length);
+
+  while (indices.length < indexLen) {
+    const x = Math.floor(Math.random() * (max - min + 1)) + min;
+    if (!indices.includes(x)) indices.push(x);
+  }
+  indices.sort((a, b) => a - b);
+
+  const ret = [];
+  ret.push(candidate[indices[0]]);
+  ret.push(candidate[indices[1]]);
+  ret.push(candidate[indices[2]]);
+  return ret;
+};
+
 const updateDailyProblems = async () => {
   try {
     const allUser = await User.find({});
 
     for (const user of allUser) {
       if (user === undefined) continue;
+      console.log(`${user.userId}`);
+      let review = [];
+      let daily = [];
+      if (user.totalSolved.length > 1) {
+        review = getThreeRandom(user.totalSolved);
+        console.log("review", review);
+        //await Uswer.findOneAndUpdate({userId: user.userId},{})
+      }
+      if (user.problemSet.length > 1) {
+        const first = new Set(user.problemSet);
+        const second = new Set(user.totalSolved);
+        const candidate = [...first].filter((elem) => !second.has(elem));
+        if (candidate.length === 1) continue;
 
-      //console.log(user.problemSet);
-      //console.log(user.totalSolved);
-      const first = new Set(user.problemSet);
-      const second = new Set(user.totalSolved);
-      const candidate = [...first].filter((elem) => !second.has(elem));
-      console.log(`${user.userId}`, candidate);
+        daily = getThreeRandom(candidate);
+        console.log("today", daily);
+      }
+      await User.findOneAndUpdate(
+        { userId: user.userId },
+        { todaySolved: daily, review: review }
+      );
     }
   } catch (err) {
     console.log(err);
@@ -80,13 +114,7 @@ const updateDailyProblems = async () => {
   }
 };
 
-export const job = schedule.scheduleJob(
-  `*/5 * * * * *`,
-  /* () =>
-    {
-  console.log("10초마다 실행");
-},*/ updateDailyProblems
-);
+export const job = schedule.scheduleJob(`52 * * * *`, updateDailyProblems);
 
 //export const job2 = schedule.scheduleJob(`*/5 * * * * *`, () => {
 //  console.log("5초마다 실행");
