@@ -1,9 +1,3 @@
-export const taglistOptions = {
-  method: "GET",
-  url: "https://solved.ac/api/v3/tag/list",
-  headers: { "Content-Type": "application/json" },
-};
-
 export const silverOptions = [
   {
     method: "GET",
@@ -269,3 +263,23 @@ export const levels = [
   { num: 19, tier: "Platinum 2" },
   { num: 20, tier: "Platinum 1" },
 ];
+
+export const Options = {
+  tagOption: {
+    method: "GET",
+    url: "https://solved.ac/api/v3/tag/list",
+    headers: { "Content-Type": "application/json" },
+  },
+  baseSearchProblemOption: {
+    method: "GET",
+    url: "https://solved.ac/api/v3/search/problem",
+    params: { query: "" },
+    headers: { "Content-Type": "application/json" },
+  },
+  totalProblemOption: {
+    method: "GET",
+    url: "https://solved.ac/api/v3/search/problem",
+    params: { query: "*s5..p1&lang:ko&s#100..&solvable:true" },
+    headers: { "Content-Type": "application/json" },
+  },
+};

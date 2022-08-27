@@ -3,13 +3,19 @@ import Problem from "../models/Problem";
 import Tag from "../models/Tag";
 import User from "../models/User";
 import {
-  taglistOptions,
   silverOptions,
   goldOptions,
   platinumOptions,
   levels,
   majorTags,
-} from "./options";
+  Options,
+} from "../utils/options";
+import {
+  getThreeRandom,
+  onlyNumbers,
+  buildQuery,
+  checkContainsMajorTags,
+} from "../utils/util";
 
 /*
 const getSilver = async () => {
@@ -88,78 +94,6 @@ const getPlatinum = async () => {
 };
 */
 
-const onlyNumbers = (str) => {
-  return /^[0-9]+$/.test(str);
-};
-
-const isValidLevel = (str) => {
-  const level = Number(str);
-  if (level >= 6 && level <= 20) return true;
-  else return false;
-};
-
-const findTier = (n) => {
-  for (let level of levels) {
-    if (level.num === n) {
-      return level.tier.charAt(0) + level.tier.charAt(level.tier.length - 1);
-    }
-  }
-  return "";
-};
-
-const groupArray = (nums) => {
-  let prev = 0;
-  let cur = 1;
-  let ret = []; // build a 2d array
-  while (cur <= nums.length) {
-    if (nums[cur - 1] + 1 !== nums[cur] || cur === nums.length) {
-      let r = [];
-      r.push(nums[prev]);
-      r.push(nums[cur - 1]);
-      ret.push(r);
-      prev = cur;
-    }
-    cur++;
-  }
-  return ret;
-};
-
-const buildQuery = (nums) => {
-  let queryList = [];
-  const ranges = groupArray(nums);
-
-  for (let range of ranges) {
-    let obj = new Object();
-    let qq = new Object();
-    qq.method = "GET";
-    qq.url = "https://solved.ac/api/v3/search/problem";
-    qq.headers = { "Content-Type": "application/json" };
-    qq.params = new Object();
-    if (
-      range.length === 2 &&
-      isValidLevel(range[0]) &&
-      isValidLevel(range[1])
-    ) {
-      qq.params.query = `*${findTier(range[0])}..${findTier(
-        range[1]
-      )}&lang:ko&s#200..`;
-      obj.page = (range[1] - range[0] + 1) * 3;
-      obj.query = qq;
-      queryList.push(obj);
-    }
-  }
-  return queryList;
-};
-
-const checkContainsMajorTags = (tagList) => {
-  let tagKeySet = new Set();
-  tagList.forEach((tag) => {
-    tagKeySet.add(tag.key);
-  });
-  if (majorTags.every((majorTag) => tagKeySet.has(majorTag))) return true;
-  else return false;
-};
-
 const findTagsFromDB = async () => {
   try {
     const dbTag = await Tag.find({});
@@ -177,7 +111,7 @@ const findTagsFromDB = async () => {
 
 const findTagsFromAPI = async () => {
   try {
-    const result = await axios.request(taglistOptions);
+    const result = await axios.request(Options.tagOption);
     if (result.status !== 200) {
       console.log("❌ Status Code Not 200 for Tag axios request.");
       return [];
@@ -321,26 +255,6 @@ const filterAPIProblem = async (levelnums, tagSet) => {
   }
 };
 
-const getThreeRandom = (candidate) => {
-  const min = 0;
-  const max = candidate.length - 1;
-
-  let indices = [];
-  const indexLen = Math.min(3, candidate.length);
-
-  while (indices.length < indexLen) {
-    const x = Math.floor(Math.random() * (max - min + 1)) + min;
-    if (!indices.includes(x)) indices.push(x);
-  }
-  indices.sort((a, b) => a - b);
-
-  const ret = [];
-  ret.push(candidate[indices[0]]);
-  ret.push(candidate[indices[1]]);
-  ret.push(candidate[indices[2]]);
-  return ret;
-};
-
 export const postProblemSettings = async (req, res) => {
   const settings = Object.values(req.body);
   let levelnums = [];
@@ -376,7 +290,7 @@ export const postProblemSettings = async (req, res) => {
     }
 
     // emtpy the User-problemSet array
-    console.log("problemController user:", req.user);
+    // console.log("problemController user:", req.user);
 
     const filter = { userId: req.user };
     const update = { problemSet: userProblems, tags: tags, levels: levelnums };

@@ -3,16 +3,10 @@ import axios from "axios";
 import crypto from "crypto";
 import passport from "passport";
 import Tag from "../models/Tag";
-import { levels } from "./options";
+import { levels } from "../utils/options";
+import { getUserSolvedProblems } from "../utils/util";
 
 const LocalStrategy = require("passport-local").Strategy;
-
-const baseOption = {
-  method: "GET",
-  url: "https://solved.ac/api/v3/search/problem",
-  params: { query: "" },
-  headers: { "Content-Type": "application/json" },
-};
 
 const createSalt = () =>
   new Promise((resolve, reject) => {
@@ -57,26 +51,7 @@ export const postJoin = async (req, res) => {
 
   const { hashedPassword, salt } = await createHashedPassword(password);
 
-  baseOption.params.query = `solved_by:${userId}`;
-
-  let totalSolved = [];
-  const maxPage = 300;
-
-  try {
-    for (let i = 1; i <= maxPage; i++) {
-      baseOption.params.page = i;
-      const result = await axios.request(baseOption);
-      if (result.status != 200) res.status(400).render("join");
-      const { items } = result.data;
-      if (items.length === 0) break;
-      for (let item of items) {
-        totalSolved.push(Number(item.problemId));
-      }
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(400).render("join");
-  }
+  const totalSolved = await getUserSolvedProblems(userId);
 
   try {
     await User.create({
