@@ -3,16 +3,18 @@ extends base.pug
 block content 
   if loginMessage 
     span=loginMessage
-  h1 IT's HOME
-  <br>
-  if todaySolved 
-    each problem in todaySolved 
-      a(href=`https://www.acmicpc.net/problem/${problem}` target="_blank" rel="noopener noreferrer") #{problem}
+  <div>
+    if loggedIn
+      h3 For Today
+      if todaySolved 
+        each problem in todaySolved 
+          a(href=`https://www.acmicpc.net/problem/${problem}` target="_blank" rel="noopener noreferrer") #{problem}
+          <br>
       <br>
-  <br>
-  if review 
-    each reviewProblem in review 
-      a(href=`https://www.acmicpc.net/problem/${reviewProblem}` target="_blank" rel="noopener noreferrer") #{reviewProblem}
-      <br>
+      h3 Review
+      if review 
+        each reviewProblem in review 
+          a(href=`https://www.acmicpc.net/problem/${reviewProblem}` target="_blank" rel="noopener noreferrer") #{reviewProblem}
+          <br>
       
     

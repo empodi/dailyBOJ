@@ -169,7 +169,7 @@ export const getLogout = async (req, res, next) => {
   });
 };
 
-export const getProfile = async (req, res, next) => {
+export const getProfile = async (req, res) => {
   //console.log("req.params:", req.params);
   const userId = req.params.id;
   const user = await User.findOne({ userId });

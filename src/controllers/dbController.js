@@ -19,15 +19,16 @@ const tagOption = {
 export const setDBProblem = async (req, res) => {
   //const userCount = await User.find().count();
   //console.log("User Count", userCount);
-
   try {
     const problemCount = await Problem.find().count();
     console.log("Problem Count", problemCount);
     if (problemCount > 2800) {
-      console.log("MongoDB: Problem Collections already set.");
+      console.log("✅ MongoDB: Problem Collections already set.");
       return res.status(200).redirect("/");
     } else {
-      /*
+      await Problem.deleteMany({});
+      const pbLen = await Problem.find().count();
+      console.log("Deleted Problem Documents:", pbLen);
       for (let i = 1; i <= 500; i++) {
         problemOption.params.page = String(i);
         const result = await axios.request(problemOption);
@@ -36,28 +37,22 @@ export const setDBProblem = async (req, res) => {
           if (items.length === 0) break;
           for (let item of items) {
             if (item.isSolvable === false || item.isPartial === true) continue;
-            try {
-              let tags = [];
-              for (let t of item.tags) tags.push(t.key);
-              await Problem.create({
-                problemId: item.problemId,
-                title: item.titleKo,
-                level: item.level,
-                isSolvable: item.isSolvable,
-                isPartial: item.isPartial,
-                tags,
-              });
-            } catch (err) {
-              console.log(err);
-              return res.status(400).render("home");
-            }
+            let tags = [];
+            for (let t of item.tags) tags.push(t.key);
+            await Problem.create({
+              problemId: item.problemId,
+              title: item.titleKo,
+              level: item.level,
+              isSolvable: item.isSolvable,
+              isPartial: item.isPartial,
+              tags,
+            });
           }
         } else {
           console.log("Problem Fetch Error");
           return res.status(400).render("home");
         }
       }
-      */
       return res.status(200).render("home");
     }
   } catch (err) {
@@ -77,12 +72,15 @@ export const setDBProblem = async (req, res) => {
 
 export const setDBTag = async (req, res) => {
   try {
+    await Tag.deleteMany({});
+    const tagLen = await Tag.find().count();
+    console.log("Deleted Tag Documents:", tagLen);
     let tlist = [];
     const tcnt = await Tag.find().count();
     const result = await axios.request(tagOption);
     const { count, items } = result.data;
     if (tcnt === count) {
-      console.log("MongoDB: Tag Collections already set.");
+      console.log("✅ MongoDB: Tag Collections already set.");
       return res.status(200).render("home");
     }
     for (const item of items) {
@@ -94,13 +92,13 @@ export const setDBTag = async (req, res) => {
       tlist.push(obj);
       */
       await Tag.create({
-        tagKey: item.key,
+        key: item.key,
         koName: item.displayNames[0].name,
         enName: item.displayNames[1].name,
       });
     }
     const tagCount = await Tag.find().count();
-    console.log("tagCount:", tagCount);
+    console.log("⭐️ tagCount:", tagCount);
     return res.status(200).render("home");
   } catch (err) {
     console.log(err);

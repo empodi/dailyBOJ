@@ -213,7 +213,7 @@ const buildLevelTagList = async (userId) => {
       tagList = await findTagsFromAPI();
     }
     if (tagList.length === 0) {
-      console.log("❌ Cannot get Tags from DB nor solved.ac API");
+      console.log("❌ Cannot get Tags from DB nor API");
       return [];
     }
 

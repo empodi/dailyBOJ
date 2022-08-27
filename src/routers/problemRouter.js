@@ -1,5 +1,5 @@
 import express from "express";
-import { onlyPrivate } from "../../middlewares";
+import { onlyPrivate } from "../middlewares";
 import {
   getProblemSettings,
   postProblemSettings,

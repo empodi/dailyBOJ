@@ -1,6 +1,6 @@
 import express from "express";
 import passport from "passport";
-import { onlyPrivate, onlyPublic } from "../../middlewares";
+import { onlyPrivate, onlyPublic } from "../middlewares";
 import { setDBTag, setDBProblem } from "../controllers/dbController";
 import {
   getJoin,

@@ -1,5 +1,6 @@
 import "./db";
 import "./models/User";
+//import "./schedule";
 import express from "express";
 import morgan from "morgan";
 import mongoose from "mongoose";
@@ -9,7 +10,8 @@ import MongoStore from "connect-mongo";
 import problemRouter from "./routers/problemRouter";
 import userRouter from "./routers/userRouter";
 import rootRouter from "./routers/rootRouter";
-import { localsMiddleware } from "../middlewares";
+import { localsMiddleware } from "./middlewares";
+import cookieParser from "cookie-parser";
 
 const app = express();
 const logger = morgan("dev");
@@ -20,13 +22,14 @@ app.set("view engine", "pug");
 app.set("views", process.cwd() + "/src/views");
 
 app.use(logger);
-app.use(express.urlencoded({ extended: true })); // translates HTML form into javascript object (POST - req.body)
 app.use(express.json()); // Backend understands the STRING and turn it into JS object
+app.use(express.urlencoded({ extended: true })); // translates HTML form into javascript object (POST - req.body)
+app.use(cookieParser());
 
 app.use(
   session({
     secret: "ABCD",
-    resave: true,
+    resave: false,
     saveUninitialized: false,
     store: new CookieStore({
       mongooseConnection: mongoose.connection,
@@ -42,6 +45,7 @@ app.use(passport.session());
 
 app.use(localsMiddleware);
 app.use("/", rootRouter);
+app.use("/users", userRouter);
 app.use("/problems", problemRouter);
 app.use("/static", express.static("assets"));
 

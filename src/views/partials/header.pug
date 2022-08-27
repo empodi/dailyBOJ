@@ -1,6 +1,5 @@
 header 
-  if loggedIn 
-    h1 Welcome #{loggedInUser}
+  h1 DAILY ALL-SOL
   nav
     ul
       li 
@@ -13,7 +12,7 @@ header
         li 
           a(href=`/problems/${loggedInUser}`) problems
         li 
-          a(href=`/users/${loggedInUser}`) Profile
+          a(href=`/users/${loggedInUser}`) #{loggedInUser}
         li 
           a(href="/logout") Logout
       else
