@@ -1,7 +1,7 @@
 import axios from "axios";
 import { levels, majorTags, Options } from "./options";
 
-export const MAX_PAGE = 300;
+export const MAX_PAGE = 500;
 export const MAX_LEVEL = 20; // Platinum 1
 export const MIN_LEVEL = 6; // Silver 5
 
@@ -11,7 +11,7 @@ export const onlyNumbers = (str) => {
 
 export const isValidLevel = (str) => {
   const level = Number(str);
-  if (level >= MIN_LEVEL && MAX_LEVEL <= 20) return true;
+  if (level >= MIN_LEVEL && level <= MAX_LEVEL) return true;
   else return false;
 };
 
