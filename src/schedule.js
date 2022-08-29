@@ -17,7 +17,10 @@ const updateSolvedProblems = async () => {
       options.params.query = `solved_by:${user.userId}`;
       const result = await axios.request(options);
 
-      if (result.status != 200) return;
+      if (result.status != 200) {
+        console.log(`❌ Failed to get User:${user.userId}`);
+        continue;
+      }
 
       if (user.totalSolved.length === Number(result.data.count)) {
         console.log(
@@ -79,29 +82,32 @@ const updateDailyProblems = async () => {
 export const dumpProblem = async () => {
   try {
     const problem = await getAllProblems();
-    const fileData = fs.readFileSync(
-      process.cwd() + "/problemBackup/problem.json",
-      { encoding: "utf-8", flag: "r" }
-    );
-    const fileProblem = JSON.parse(fileData);
-
-    if (problem.length > fileProblem.counts) {
+    console.log(problem.length);
+    const fileData = fs.readFileSync(process.cwd() + "/src/db/problem.json", {
+      encoding: "utf-8",
+      flag: "r",
+    });
+    let fileProblem = {};
+    fileProblem.counts = 0;
+    if (fileData.length > 0) fileProblem = JSON.parse(fileData);
+    console.log("dump problem length:", problem.length);
+    if (problem.length !== fileProblem.counts) {
       const dump = new Object();
       dump.counts = problem.length;
       dump.lastUpdate = new Date();
       dump.problems = problem;
       fs.writeFileSync(
-        process.cwd() + "/problemBackup/problem.json",
+        process.cwd() + "/src/db/problem.json",
         JSON.stringify(dump)
       );
-      console.log("⭐️ Set FS Problems");
+      console.log("⭐️ Set FS Problems:", dump.problems.length);
     } else {
-      console.log("✅ fs problems already up to date:", fileProblem.counts);
+      console.log("✅ fs problems already upto date:", fileProblem.counts);
     }
 
     const dbProblemCnt = await Problem.find().count();
-    if (problem.length > dbProblemCnt) {
-      await Problem.deleteMany({});
+    if (problem.length !== dbProblemCnt) {
+      if (dbProblemCnt > problem.length) await Problem.deleteMany({});
       for (const item of problem) {
         const problemExists = await Problem.exists({
           problemId: item.problemId,
@@ -125,7 +131,7 @@ export const dumpProblem = async () => {
 };
 
 export const job1 = schedule.scheduleJob(`18 * * * *`, updateSolvedProblems);
-export const job2 = schedule.scheduleJob(`19 * * * *`, dumpProblem);
+export const job2 = schedule.scheduleJob(`58 * * * *`, dumpProblem);
 
 //export const job2 = schedule.scheduleJob(`*/5 * * * * *`, () => {
 //  console.log("5초마다 실행");

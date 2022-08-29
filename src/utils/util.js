@@ -4,6 +4,10 @@ import { levels, majorTags, Options } from "./options";
 export const MAX_PAGE = 500;
 export const MAX_LEVEL = 20; // Platinum 1
 export const MIN_LEVEL = 6; // Silver 5
+export const USER_COUNT = 100;
+
+export const isArrayEqual = (a, b) =>
+  a.length === b.length && a.every((v, i) => String(v) === String(b[i]));
 
 export const onlyNumbers = (str) => {
   return /^[0-9]+$/.test(str);
@@ -41,27 +45,26 @@ export const groupArray = (nums) => {
   return ret;
 };
 
-export const buildQuery = (nums) => {
-  let queryList = [];
+export const buildParams = (nums) => {
+  let paramsList = [];
   const ranges = groupArray(nums);
-
-  for (let range of ranges) {
-    const obj = new Object();
-    const newQuery = Options.baseSearchProblemOption;
+  //console.log(ranges);
+  for (const range of ranges) {
     if (
       range.length === 2 &&
       isValidLevel(range[0]) &&
       isValidLevel(range[1])
     ) {
-      newQuery.params.query = `*${findTier(range[0])}..${findTier(
+      const obj = new Object();
+      const apiQuery = `*${findTier(range[0])}..${findTier(
         range[1]
-      )}&lang:ko&s#200..`;
+      )}&lang:ko&s#${USER_COUNT}..`;
       obj.page = (range[1] - range[0] + 1) * 3;
-      obj.query = newQuery;
-      queryList.push(obj);
+      obj.query = apiQuery;
+      paramsList.push(obj);
     }
   }
-  return queryList;
+  return paramsList;
 };
 
 export const checkContainsMajorTags = (tagList) => {
@@ -120,23 +123,27 @@ export const getAllProblems = async () => {
   try {
     const problem = [];
 
+    const option = Options.totalProblemOption;
+    option.params.query += `&s#${USER_COUNT}..`;
+
     for (let i = 1; i <= MAX_PAGE; i++) {
-      const option = Options.totalProblemOption;
       option.params.page = String(i);
+      //console.log(option.params);
       const result = await axios.request(option);
       if (result.status === 200) {
         const { items } = result.data;
         if (items.length === 0) break;
         for (let item of items) {
-          if (item.isSolvable === false || item.isPartial === true) continue;
-          const obj = new Object();
-          let tags = [];
-          for (let t of item.tags) tags.push(t.key);
-          obj.problemId = item.problemId;
-          obj.title = item.titleKo;
-          obj.level = item.level;
-          obj.tags = tags;
-          problem.push(obj);
+          if (item.isSolvable && !item.isPartial) {
+            const obj = new Object();
+            let tags = [];
+            for (let t of item.tags) tags.push(t.key);
+            obj.problemId = item.problemId;
+            obj.title = item.titleKo;
+            obj.level = item.level;
+            obj.tags = tags;
+            problem.push(obj);
+          }
         }
       } else {
         console.log("Problem Fetch Error");

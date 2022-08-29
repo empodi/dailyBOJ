@@ -2,97 +2,15 @@ import axios from "axios";
 import Problem from "../models/Problem";
 import Tag from "../models/Tag";
 import User from "../models/User";
-import {
-  silverOptions,
-  goldOptions,
-  platinumOptions,
-  levels,
-  majorTags,
-  Options,
-} from "../utils/options";
+import { levels, majorTags, Options } from "../utils/options";
 import {
   getThreeRandom,
   onlyNumbers,
-  buildQuery,
+  buildParams,
   checkContainsMajorTags,
+  isArrayEqual,
 } from "../utils/util";
-
-/*
-const getSilver = async () => {
-  let sArray = [];
-
-  const promises = silverOptions.map(async (silverOption) => {
-    const result = await axios.request(silverOption);
-    if (result.status == 200) {
-      const silverObjList = result.data.items;
-
-      silverObjList.forEach((elem) => {
-        let silver = new Object();
-        silver.problemId = elem.problemId;
-        silver.title = elem.titleKo;
-        silver.level = elem.level;
-        silver.tags = [];
-        elem.tags.forEach((tag) => {
-          silver.tags.push(tag.key);
-        });
-        sArray.push(silver);
-      });
-    }
-  });
-  await Promise.all(promises);
-
-  return sArray;
-};
-
-const getGold = async () => {
-  let gArray = [];
-
-  const promises = goldOptions.map(async (goldOption) => {
-    const result = await axios.request(goldOption);
-    if (result.status == 200) {
-      const goldObjList = result.data.items;
-
-      goldObjList.forEach((elem) => {
-        let gold = new Object();
-        gold.problemId = elem.problemId;
-        gold.title = elem.titleKo;
-        gold.level = elem.level;
-        gold.tags = [];
-        elem.tags.forEach((tag) => {
-          gold.tags.push(tag.key);
-        });
-        gArray.push(gold);
-      });
-    }
-  });
-  await Promise.all(promises);
-  return gArray;
-};
-
-const getPlatinum = async () => {
-  let pArray = [];
-  const promises = platinumOptions.map(async (platinumOption) => {
-    const result = await axios.request(platinumOption);
-    if (result.status == 200) {
-      const platinumObjList = result.data.items;
-
-      platinumObjList.forEach((elem) => {
-        let platinum = new Object();
-        platinum.problemId = elem.problemId;
-        platinum.title = elem.titleKo;
-        platinum.level = elem.level;
-        platinum.tags = [];
-        elem.tags.forEach((tag) => {
-          platinum.tags.push(tag.key);
-        });
-        pArray.push(platinum);
-      });
-    }
-  });
-  await Promise.all(promises);
-  return pArray;
-};
-*/
+const fs = require("fs");
 
 const findTagsFromDB = async () => {
   try {
@@ -143,7 +61,7 @@ const buildLevelTagList = async (userId) => {
     //console.log(user);
     const dbTag = user.tags;
     const dbLevels = user.levels;
-    if (tagList.length === 0) {
+    if (tagList.length < 190) {
       tagList = await findTagsFromAPI();
     }
     if (tagList.length === 0) {
@@ -205,7 +123,33 @@ const filterDBProblem = async (levelnums, tagSet) => {
     const result = await Problem.find().in("level", levelnums);
     //console.log("filterDB_Problem:", result.length);
     for (const item of result) {
-      if (levelSet.has(item.level) && item.isSolvable && !item.isPartial) {
+      if (levelSet.has(item.level)) {
+        if (item.tags.every((tag) => tagSet.has(tag))) {
+          filtered.push(item.problemId);
+        }
+      }
+    }
+    return filtered;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
+
+const filterFSProblem = async (levelnums, tagSet) => {
+  try {
+    let filtered = [];
+    const levelSet = new Set(levelnums);
+    const fileData = fs.readFileSync(process.cwd() + "/src/db/problem.json", {
+      encoding: "utf-8",
+      flag: "r",
+    });
+    if (fileData.length === 0) return;
+    const fileProblem = JSON.parse(fileData);
+    if (fileProblem.problems.length < fileProblem.counts) return [];
+
+    for (const item of fileProblem.problems) {
+      if (levelSet.has(item.level)) {
         if (item.tags.every((tag) => tagSet.has(tag))) {
           filtered.push(item.problemId);
         }
@@ -222,16 +166,30 @@ const filterAPIProblem = async (levelnums, tagSet) => {
   try {
     let filtered = [];
     const levelSet = new Set(levelnums);
-    const queryArray = buildQuery(levelnums);
-    const promises = queryArray.map(async (queryObj) => {
-      for (let i = 1; i <= queryObj.page; i++) {
-        queryObj.query.params.page = String(i);
-        const result = await axios.request(queryObj.query);
+    const paramsArray = buildParams(levelnums);
+    /*
+    console.log("😀 Print query");
+    for (const params of paramsArray) {
+      console.log(params);
+    }
+    console.log("😀 Print Query End");
+    */
+    for (const params of paramsArray) {
+      //console.log(queryObj);
+
+      for (let i = 1; i <= params.page; i++) {
+        const queryObj = Options.baseSearchProblemOption;
+        queryObj.params.page = String(i);
+        queryObj.params.query = params.query;
+        //console.log(queryObj.params.query);
+        const result = await axios.request(queryObj);
         if (result.status === 200) {
           const { items } = result.data;
+          //console.log(items.length);
           if (items.length === 0) break;
 
           for (const item of items) {
+            //console.log(item.problemId);
             if (
               levelSet.has(item.level) &&
               item.isSolvable &&
@@ -246,8 +204,7 @@ const filterAPIProblem = async (levelnums, tagSet) => {
           }
         }
       }
-    });
-    await Promise.all(promises);
+    }
     return filtered;
   } catch (err) {
     console.log(err);
@@ -270,14 +227,31 @@ export const postProblemSettings = async (req, res) => {
 
   try {
     let userProblems = await filterDBProblem(levelnums, tagSet);
-
-    if (userProblems.length > 0) {
+    const dbProblemCnt = await Problem.find().count();
+    if (dbProblemCnt > 2900 && userProblems.length > 0) {
       console.log("⭐️ Got Problems from DB:", userProblems.length);
     } else {
-      userProblems = await filterAPIProblem(levelnums, tagSet);
+      userProblems = await filterFSProblem(levelnums, tagSet);
       if (userProblems.length > 0) {
-        console.log("⭐️ Got Problems from API:", userProblems.length);
+        console.log("⭐️ Got Problems from FS:", userProblems.length);
+      } else {
+        userProblems = await filterAPIProblem(levelnums, tagSet);
+        if (userProblems.length > 0) {
+          console.log("⭐️ Got Problems from API:", userProblems.length);
+        }
       }
+    }
+
+    const filter = { userId: req.user };
+    const dbUser = await User.findOne(filter);
+
+    if (
+      isArrayEqual(dbUser.tags, tags) &&
+      isArrayEqual(dbUser.levels, levelnums) &&
+      dbUser.problemSet.length === userProblems.length
+    ) {
+      console.log(`✅ ${req.user}'s problemSet already upto date.`);
+      return;
     }
 
     if (userProblems.length === 0) {
@@ -292,12 +266,9 @@ export const postProblemSettings = async (req, res) => {
     // emtpy the User-problemSet array
     // console.log("problemController user:", req.user);
 
-    const filter = { userId: req.user };
     const update = { problemSet: userProblems, tags: tags, levels: levelnums };
-
     await User.findOneAndUpdate(filter, update);
 
-    const dbUser = await User.findOne(filter);
     //console.log(dbUser.problemSet);
     //console.log("problemSet from DB: ", dbUser.problemSet.length);
 
@@ -329,7 +300,3 @@ export const postProblemSettings = async (req, res) => {
     }
   }
 };
-
-/*
-query for sovled.ac API: *s5..p1&lang:ko&s#100..&solvable:true
-*/
