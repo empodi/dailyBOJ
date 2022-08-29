@@ -1,13 +1,13 @@
 import User from "./models/User";
+import Problem from "./models/Problem";
 import axios from "axios";
 import { getThreeRandom, getUserSolvedProblems } from "./utils/util";
 import { Options } from "./utils/options";
-const schedule = require("node-schedule");
+import { getAllProblems } from "./utils/util";
 
-//const j = schedule.scheduleJob(`*/5 * * * * *`, function () {
-//  console.log("매 5초마다 실행");
-//});
-//app.set(j);
+const schedule = require("node-schedule");
+const fs = require("fs");
+
 const updateSolvedProblems = async () => {
   try {
     const allUser = await User.find({});
@@ -76,7 +76,56 @@ const updateDailyProblems = async () => {
   }
 };
 
-export const job = schedule.scheduleJob(`36 * * * *`, updateSolvedProblems);
+export const dumpProblem = async () => {
+  try {
+    const problem = await getAllProblems();
+    const fileData = fs.readFileSync(
+      process.cwd() + "/problemBackup/problem.json",
+      { encoding: "utf-8", flag: "r" }
+    );
+    const fileProblem = JSON.parse(fileData);
+
+    if (problem.length > fileProblem.counts) {
+      const dump = new Object();
+      dump.counts = problem.length;
+      dump.lastUpdate = new Date();
+      dump.problems = problem;
+      fs.writeFileSync(
+        process.cwd() + "/problemBackup/problem.json",
+        JSON.stringify(dump)
+      );
+      console.log("⭐️ Set FS Problems");
+    } else {
+      console.log("✅ fs problems already up to date:", fileProblem.counts);
+    }
+
+    const dbProblemCnt = await Problem.find().count();
+    if (problem.length > dbProblemCnt) {
+      await Problem.deleteMany({});
+      for (const item of problem) {
+        const problemExists = await Problem.exists({
+          problemId: item.problemId,
+        });
+        if (!problemExists) {
+          await Problem.create({
+            problemId: item.problemId,
+            title: item.title,
+            level: item.level,
+            tags: item.tags,
+          });
+        }
+      }
+      console.log("⭐️ Set DB Problems");
+    } else {
+      console.log("✅ MongoDB: Problem Collections already set.");
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const job1 = schedule.scheduleJob(`18 * * * *`, updateSolvedProblems);
+export const job2 = schedule.scheduleJob(`19 * * * *`, dumpProblem);
 
 //export const job2 = schedule.scheduleJob(`*/5 * * * * *`, () => {
 //  console.log("5초마다 실행");

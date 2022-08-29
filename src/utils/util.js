@@ -115,3 +115,36 @@ export const getUserSolvedProblems = async (userId) => {
     return [];
   }
 };
+
+export const getAllProblems = async () => {
+  try {
+    const problem = [];
+
+    for (let i = 1; i <= MAX_PAGE; i++) {
+      const option = Options.totalProblemOption;
+      option.params.page = String(i);
+      const result = await axios.request(option);
+      if (result.status === 200) {
+        const { items } = result.data;
+        if (items.length === 0) break;
+        for (let item of items) {
+          if (item.isSolvable === false || item.isPartial === true) continue;
+          const obj = new Object();
+          let tags = [];
+          for (let t of item.tags) tags.push(t.key);
+          obj.problemId = item.problemId;
+          obj.title = item.titleKo;
+          obj.level = item.level;
+          obj.tags = tags;
+          problem.push(obj);
+        }
+      } else {
+        console.log("Problem Fetch Error");
+      }
+    }
+    return problem;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
