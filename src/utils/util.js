@@ -67,6 +67,37 @@ export const buildParams = (nums) => {
   return paramsList;
 };
 
+/**이제 정상 출력 */
+export const buildQuery = (nums) => {
+  let queryList = [];
+  const ranges = groupArray(nums);
+  for (let range of ranges) {
+    if (
+      range.length === 2 &&
+      isValidLevel(range[0]) &&
+      isValidLevel(range[1])
+    ) {
+      const obj = new Object();
+      obj.method = Options.baseSearchProblemOption.method;
+      obj.url = Options.baseSearchProblemOption.url;
+      obj.params = new Object();
+      obj.headers = Options.baseSearchProblemOption.headers;
+      const newQuery = `*${findTier(range[0])}..${findTier(
+        range[1]
+      )}&lang:ko&s#200..`;
+      obj.params.page = (range[1] - range[0] + 1) * 3;
+      obj.params.query = newQuery;
+      queryList.push(obj);
+    }
+  }
+  console.log("😀 console buildQuery start");
+  for (const q of queryList) {
+    console.log(q);
+  }
+  console.log("😀 console buildQuery end");
+  return queryList;
+};
+
 export const checkContainsMajorTags = (tagList) => {
   let tagKeySet = new Set();
   tagList.forEach((tag) => {
@@ -155,3 +186,35 @@ export const getAllProblems = async () => {
     return [];
   }
 };
+
+/**
+ * 
+ * 이것도 중복 출력....
+export const buildQuery = (nums) => {
+  let queryList = [];
+  const ranges = groupArray(nums);
+  for (let range of ranges) {
+    if (
+      range.length === 2 &&
+      isValidLevel(range[0]) &&
+      isValidLevel(range[1])
+    ) {
+      const obj = Options.baseSearchProblemOption;
+      const newQuery = `*${findTier(range[0])}..${findTier(
+        range[1]
+      )}&lang:ko&s#200..`;
+      obj.params.page = (range[1] - range[0] + 1) * 3;
+      obj.params.query = newQuery;
+      queryList.push(obj);
+    }
+  }
+  console.log("😀 console buildQuery start");
+  for (const q of queryList) {
+    console.log(q);
+  }
+  console.log("😀 console buildQuery end");
+  return queryList;
+};
+ * 
+ * 
+ */
