@@ -108,6 +108,7 @@ export const checkContainsMajorTags = (tagList) => {
 };
 
 export const getThreeRandom = (candidate) => {
+  if (candidate.length < 3) return [];
   const min = 0;
   const max = candidate.length - 1;
 
@@ -181,6 +182,32 @@ export const getAllProblems = async () => {
       }
     }
     return problem;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
+
+export const getAllTags = async () => {
+  try {
+    const result = await axios.request(Options.tagOption);
+    if (result.status !== 200) {
+      console.log("❌ Status Code Not 200 for Tag axios request.");
+      return [];
+    }
+    const { items } = result.data;
+    let apiTags = [];
+    if (checkContainsMajorTags(items) && items.length > 190) {
+      items.map((item) => {
+        let obj = new Object();
+        obj.key = item.key;
+        obj.koName = item.displayNames[0].name;
+        obj.enName = item.displayNames[1].name;
+        apiTags.push(obj);
+      });
+      console.log("⭐️ Got tags from solved.ac API");
+      return apiTags;
+    }
   } catch (err) {
     console.log(err);
     return [];
