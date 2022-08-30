@@ -31,13 +31,16 @@ const findTagsFromDB = async () => {
 
 const findTagsFromFS = async () => {
   try {
-    const fileData = fs.readFileSync(process.cwd() + "/src/db/tag.json", {
-      encoding: "utf-8",
-      flag: "r",
-    });
-    if (fileData.length === 0) return [];
-    const fileTag = JSON.parse(fileData);
-    return fileTag.tags;
+    if (fs.existsSync(process.cwd() + "/src/db/tag.json")) {
+      const fileData = fs.readFileSync(process.cwd() + "/src/db/tag.json", {
+        encoding: "utf-8",
+        flag: "r",
+      });
+      if (fileData.length === 0) return [];
+      const fileTag = JSON.parse(fileData);
+      return fileTag.tags;
+    }
+    return [];
   } catch (err) {
     console.log(err);
     return [];
@@ -47,7 +50,7 @@ const findTagsFromFS = async () => {
 const buildLevelTagList = async (userId) => {
   try {
     let tagList = [];
-    //tagList = await findTagsFromDB();
+    tagList = await findTagsFromDB();
     if (tagList.length < 190) {
       tagList = await findTagsFromFS();
       console.log("⭐️ Got tags from FS:", tagList.length);
@@ -137,24 +140,27 @@ const filterDBProblem = async (levelnums, tagSet) => {
 
 const filterFSProblem = async (levelnums, tagSet) => {
   try {
-    let filtered = [];
-    const levelSet = new Set(levelnums);
-    const fileData = fs.readFileSync(process.cwd() + "/src/db/problem.json", {
-      encoding: "utf-8",
-      flag: "r",
-    });
-    if (fileData.length === 0) return [];
-    const fileProblem = JSON.parse(fileData);
-    if (fileProblem.problems.length < fileProblem.counts) return [];
+    if (fs.existsSync(process.cwd() + "/src/db/problem.json")) {
+      let filtered = [];
+      const levelSet = new Set(levelnums);
+      const fileData = fs.readFileSync(process.cwd() + "/src/db/problem.json", {
+        encoding: "utf-8",
+        flag: "r",
+      });
+      if (fileData.length === 0) return [];
+      const fileProblem = JSON.parse(fileData);
+      if (fileProblem.problems.length < fileProblem.counts) return [];
 
-    for (const item of fileProblem.problems) {
-      if (levelSet.has(item.level)) {
-        if (item.tags.every((tag) => tagSet.has(tag))) {
-          filtered.push(item.problemId);
+      for (const item of fileProblem.problems) {
+        if (levelSet.has(item.level)) {
+          if (item.tags.every((tag) => tagSet.has(tag))) {
+            filtered.push(item.problemId);
+          }
         }
       }
+      return filtered;
     }
-    return filtered;
+    return [];
   } catch (err) {
     console.log(err);
     return [];

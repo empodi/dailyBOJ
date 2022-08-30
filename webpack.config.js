@@ -7,8 +7,6 @@ module.exports = {
     main: "./src/client/js/main.js",
     checkBOJ: "./src/client/js/checkBOJ.js",
   },
-  mode: "development",
-  watch: true,
   output: {
     filename: "js/[name].js",
     path: path.resolve(__dirname, "assets"),

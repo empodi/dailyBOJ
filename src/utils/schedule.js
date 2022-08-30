@@ -87,10 +87,13 @@ const dumpProblem = async () => {
     const problem = await getAllProblems();
     if (problem.length < 2900) return;
     console.log(problem.length);
-    const fileData = fs.readFileSync(process.cwd() + "/src/db/problem.json", {
-      encoding: "utf-8",
-      flag: "r",
-    });
+    let fileData = [];
+    if (fs.existsSync(process.cwd() + "/src/db/problem.json")) {
+      fileData = fs.readFileSync(process.cwd() + "/src/db/problem.json", {
+        encoding: "utf-8",
+        flag: "r",
+      });
+    }
     let fileProblem = {};
     fileProblem.counts = 0;
     if (fileData.length > 0) fileProblem = JSON.parse(fileData);
@@ -137,10 +140,13 @@ const dumpTags = async () => {
   try {
     const tags = await getAllTags();
     if (tags.length < 190) return;
-    const fileData = fs.readFileSync(process.cwd() + "/src/db/tag.json", {
-      encoding: "utf-8",
-      flag: "r",
-    });
+    let fileData = [];
+    if (fs.existsSync(process.cwd() + "/src/db/tag.json")) {
+      fileData = fs.readFileSync(process.cwd() + "/src/db/tag.json", {
+        encoding: "utf-8",
+        flag: "r",
+      });
+    }
     let fileTag = {};
     fileTag.counts = 0;
     if (fileData.length > 0) fileTag = JSON.parse(fileData);
@@ -196,7 +202,7 @@ dailyRule.minute = 0;
 dailyRule.tz = TIME_ZONE;
 
 const dumpProblemRule = new schedule.RecurrenceRule();
-dumpProblemRule.minute = 2;
+dumpProblemRule.minute = 3;
 dumpProblemRule.tz = TIME_ZONE;
 
 const dumpTagRule = new schedule.RecurrenceRule();

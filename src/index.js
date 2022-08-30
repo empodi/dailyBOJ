@@ -1,3 +1,4 @@
+import "dotenv/config";
 import "./db/db";
 import "./models/User";
 import "./utils/schedule";
@@ -12,6 +13,7 @@ import userRouter from "./routers/userRouter";
 import rootRouter from "./routers/rootRouter";
 import { localsMiddleware } from "./middlewares";
 import cookieParser from "cookie-parser";
+import "regenerator-runtime";
 
 const app = express();
 const logger = morgan("dev");
@@ -28,7 +30,7 @@ app.use(cookieParser());
 
 app.use(
   session({
-    secret: "ABCD",
+    secret: process.env.COOKIE_SECRET,
     resave: false,
     saveUninitialized: false,
     store: new CookieStore({
