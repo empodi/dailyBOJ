@@ -18,7 +18,7 @@ import cookieParser from "cookie-parser";
 const app = express();
 const logger = morgan("dev");
 const CookieStore = MongoStore(session);
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 app.set("view engine", "pug");
 app.set("views", process.cwd() + "/src/views");
