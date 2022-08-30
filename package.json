@@ -4,8 +4,8 @@
   "description": "helps you solve BOJ everyday",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --exec babel-node src/index.js",
-    "assets": "webpack --config webpack.config.js",
+    "dev:server": "nodemon",
+    "dev:assets": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
