@@ -6,14 +6,15 @@ block content
     span=errorMessage
   form#BOJ
     input(name="userId-Boj", placeholder="백준 아이디", type="text", class="bojID", minlength=3, required)#BOJ-ID
-    input(name="solvedExp", placeholder="solvedac exp", type="text", required)#BOJ-EXP
-    button GO
+    input(name="solvedExp", placeholder="solvedac 경험치", type="text", required)#BOJ-EXP
+    button 인증
   span#AUTH 
   <hr>
   form(method="POST",data-flag="false",onsubmit="return ID_PWD_Checker();")#subForm
+    span 백준 아이디를 DAILY ALL-SOL 아이디로 사용합니다.
     input(name="userId", placeholder="백준 아이디", type="text", readonly=true, required)#userID
-    input(name="password", placeholder="Password" type="password",required)#PWD1
-    input(name="confirmPassword", placeholder="Confirm password" type="password", required)#PWD2
+    input(name="password", placeholder="비밀번호" type="password",required)#PWD1
+    input(name="confirmPassword", placeholder="비밀번호 확인" type="password", required)#PWD2
     input(name="email", placeholder="Email" type="email", required)
     input(type="submit",value="Join")
 block scripts 

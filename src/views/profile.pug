@@ -2,14 +2,16 @@ extends base.pug
 
 block content
   div 
-    h4 ID: #{user.userId}
-    h3 랜덤 문제 수: #{user.problemSet.length}
+    h2 ID: #{user.userId}
     h3 지금까지 푼 문제 수: #{user.totalSolved.length}
+    h3 선택된 랜덤 문제 수: #{user.problemSet.length}
     <br>
+    h4 선택한 레벨
     each level in levelName
       span=level
       <br>
     <br>
+    h4 선택한 태그
     each tag in koTag
       span=tag 
       <br>

@@ -4,13 +4,9 @@ header
     ul
       li 
         a(href="/") Home
-      li 
-        a(href="/dbProblem") Check Problem
-      li 
-        a(href="/dbTag") Check Tag
       if loggedIn 
         li 
-          a(href=`/problems/${loggedInUser}`) problems
+          a(href=`/problems/${loggedInUser}`) Level&Tag
         li 
           a(href=`/users/${loggedInUser}`) #{loggedInUser}
         li 
