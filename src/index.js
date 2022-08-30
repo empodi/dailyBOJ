@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "regenerator-runtime/runtime.js";
 import "./db/db";
 import "./models/User";
 import "./utils/schedule";
