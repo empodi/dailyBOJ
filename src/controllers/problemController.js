@@ -9,6 +9,8 @@ import {
   buildParams,
   checkContainsMajorTags,
   isArrayEqual,
+  buildQuery,
+  getAllTags,
 } from "../utils/util";
 const fs = require("fs");
 
@@ -27,26 +29,15 @@ const findTagsFromDB = async () => {
   }
 };
 
-const findTagsFromAPI = async () => {
+const findTagsFromFS = async () => {
   try {
-    const result = await axios.request(Options.tagOption);
-    if (result.status !== 200) {
-      console.log("❌ Status Code Not 200 for Tag axios request.");
-      return [];
-    }
-    const { items } = result.data;
-    let apiTags = [];
-    if (checkContainsMajorTags(items) && items.length > 190) {
-      items.forEach((item) => {
-        let obj = new Object();
-        obj.key = item.key;
-        obj.koName = item.displayNames[0].name;
-        obj.enName = item.displayNames[1].name;
-        apiTags.push(obj);
-      });
-      console.log("⭐️ Got tags from solved.ac API");
-      return apiTags;
-    }
+    const fileData = fs.readFileSync(process.cwd() + "/src/db/tag.json", {
+      encoding: "utf-8",
+      flag: "r",
+    });
+    if (fileData.length === 0) return [];
+    const fileTag = JSON.parse(fileData);
+    return fileTag.tags;
   } catch (err) {
     console.log(err);
     return [];
@@ -56,18 +47,24 @@ const findTagsFromAPI = async () => {
 const buildLevelTagList = async (userId) => {
   try {
     let tagList = [];
-    tagList = await findTagsFromDB();
-    const user = await User.findOne({ userId });
-    //console.log(user);
-    const dbTag = user.tags;
-    const dbLevels = user.levels;
+    //tagList = await findTagsFromDB();
     if (tagList.length < 190) {
-      tagList = await findTagsFromAPI();
+      tagList = await findTagsFromFS();
+      console.log("⭐️ Got tags from FS:", tagList.length);
     }
-    if (tagList.length === 0) {
+    if (tagList.length < 190) {
+      tagList = await getAllTags();
+      console.log("⭐️ Got tags from API:", tagList.length);
+    }
+    if (tagList.length < 190) {
       console.log("❌ Cannot get Tags from DB nor API");
       return [];
     }
+
+    const user = await User.findOne({ userId });
+    //console.log(user);
+    const dbTag = user ? user.tags : [];
+    const dbLevels = user ? user.levels : [];
 
     tagList.forEach((tag) => {
       if (dbTag.length > 0) {
@@ -118,6 +115,8 @@ export const getProblemSettings = async (req, res) => {
 
 const filterDBProblem = async (levelnums, tagSet) => {
   try {
+    const dbProblemCnt = await Problem.find().count();
+    if (dbProblemCnt < 2900) return [];
     let filtered = [];
     const levelSet = new Set(levelnums);
     const result = await Problem.find().in("level", levelnums);
@@ -144,7 +143,7 @@ const filterFSProblem = async (levelnums, tagSet) => {
       encoding: "utf-8",
       flag: "r",
     });
-    if (fileData.length === 0) return;
+    if (fileData.length === 0) return [];
     const fileProblem = JSON.parse(fileData);
     if (fileProblem.problems.length < fileProblem.counts) return [];
 
@@ -167,13 +166,8 @@ const filterAPIProblem = async (levelnums, tagSet) => {
     let filtered = [];
     const levelSet = new Set(levelnums);
     const paramsArray = buildParams(levelnums);
-    /*
-    console.log("😀 Print query");
-    for (const params of paramsArray) {
-      console.log(params);
-    }
-    console.log("😀 Print Query End");
-    */
+    buildQuery(levelnums);
+
     for (const params of paramsArray) {
       //console.log(queryObj);
 
@@ -227,8 +221,7 @@ export const postProblemSettings = async (req, res) => {
 
   try {
     let userProblems = await filterDBProblem(levelnums, tagSet);
-    const dbProblemCnt = await Problem.find().count();
-    if (dbProblemCnt > 2900 && userProblems.length > 0) {
+    if (userProblems.length > 0) {
       console.log("⭐️ Got Problems from DB:", userProblems.length);
     } else {
       userProblems = await filterFSProblem(levelnums, tagSet);
@@ -245,13 +238,19 @@ export const postProblemSettings = async (req, res) => {
     const filter = { userId: req.user };
     const dbUser = await User.findOne(filter);
 
+    if (!dbUser) {
+      console.log("Cannot find User:", req.user);
+      return res.status(200).redirect("/");
+    }
+
     if (
       isArrayEqual(dbUser.tags, tags) &&
       isArrayEqual(dbUser.levels, levelnums) &&
-      dbUser.problemSet.length === userProblems.length
+      dbUser.problemSet.length === userProblems.length &&
+      dbUser.todaySolved.length === 3
     ) {
       console.log(`✅ ${req.user}'s problemSet already upto date.`);
-      return;
+      return res.status(200).redirect("/");
     }
 
     if (userProblems.length === 0) {
