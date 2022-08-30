@@ -13,7 +13,6 @@ import userRouter from "./routers/userRouter";
 import rootRouter from "./routers/rootRouter";
 import { localsMiddleware } from "./middlewares";
 import cookieParser from "cookie-parser";
-import "regenerator-runtime";
 
 const app = express();
 const logger = morgan("dev");
