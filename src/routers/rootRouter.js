@@ -1,7 +1,6 @@
 import express from "express";
 import passport from "passport";
 import { onlyPrivate, onlyPublic } from "../middlewares";
-import { setDBTag, setDBProblem } from "../controllers/dbController";
 import {
   getJoin,
   getLogin,
@@ -11,9 +10,6 @@ import {
 } from "../controllers/userController";
 
 const rootRouter = express.Router();
-
-rootRouter.get("/dbProblem", setDBProblem);
-rootRouter.get("/dbTag", setDBTag);
 
 rootRouter.get("/", home);
 rootRouter.route("/join").all(onlyPublic).get(getJoin).post(postJoin);
